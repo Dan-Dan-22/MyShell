@@ -4,8 +4,40 @@
 #include <unistd.h>
 #include <sys/wait.h>
 
+struct Comando{
+	char *nome;
+	int (*funzione)(char **args);
+	};
+
+int comando_quit(char **args){
+		return 1;
+	}
+int comando_help(char **args){
+		printf("Comandi: cd, help, exit\n");
+	}
+int comando_cd(char **args){
+		char *destinazione = args[1];
+		if(destinazione == NULL){
+			destinazione = getenv("HOME");
+		}
+		if(destinazione == NULL){
+			fprintf(stderr, "cd: HOME non impostata\n");
+		}
+		if(chdir(destinazione) == -1){
+				perror("cd");
+		}
+		return 0;
+	}
+
 int main(){
-	while(1){
+	struct Comando comandi[] = {
+		{"quit", comando_quit},
+		{"help", comando_help},
+		{"cd", comando_cd},
+	};
+	int esci = 0;
+	int n_comandi = sizeof(comandi)/sizeof(comandi[0]);
+	while(!esci){
 		char riga[1024]; 
 		char *args[64];
 		printf("myshell> ");
@@ -25,8 +57,18 @@ int main(){
 		if(args[0] == NULL){
 			continue;
 		}
-		if(strcmp(args[0], "quit") == 0){
-			break;
+		int interno = 0;
+		for(int k=0; k<n_comandi; k++){
+			if(strcmp(args[0], comandi[k].nome) == 0){
+				interno = 1;
+				if(comandi[k].funzione(args) == 1){
+					esci = 1;
+				}
+				break;
+			}
+		}
+		if(interno){
+			continue;
 		}
 		pid_t pid = fork();
 		if(pid == 0){
