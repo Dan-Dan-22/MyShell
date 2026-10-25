@@ -1,4 +1,4 @@
-# mysh
+# MyShell
 
 A minimal Unix shell written in C from scratch, built as a hands-on way to
 learn how operating systems create and manage processes.
